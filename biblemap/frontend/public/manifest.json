@@ -1,0 +1,24 @@
+{
+  "name": "BibleMap - 성경 지도 탐험",
+  "short_name": "BibleMap",
+  "description": "성경의 지리적, 역사적 정보를 시각화하고 탐색할 수 있는 인터랙티브 플랫폼",
+  "theme_color": "#1E40AF",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["education", "books"]
+}

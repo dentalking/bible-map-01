@@ -1,0 +1,93 @@
+services:
+  # Frontend - Next.js
+  frontend:
+    container_name: biblemap-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:4000
+    depends_on:
+      - backend
+    networks:
+      - biblemap-network
+
+  # Backend - Node.js + Express
+  backend:
+    container_name: biblemap-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - DATABASE_URL=postgresql://biblemap:biblemap123@postgres:5432/biblemap
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-secret-key-change-in-production
+      - CORS_ORIGIN=http://localhost:3001
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - biblemap-network
+
+  # PostgreSQL Database
+  postgres:
+    container_name: biblemap-postgres
+    image: postgis/postgis:15-3.3
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=biblemap
+      - POSTGRES_PASSWORD=biblemap123
+      - POSTGRES_DB=biblemap
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - biblemap-network
+
+  # Redis Cache
+  redis:
+    container_name: biblemap-redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - biblemap-network
+
+  # pgAdmin for Database Management
+  pgadmin:
+    container_name: biblemap-pgadmin
+    image: dpage/pgadmin4:latest
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@biblemap.com
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+    depends_on:
+      - postgres
+    networks:
+      - biblemap-network
+
+networks:
+  biblemap-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

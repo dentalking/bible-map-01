@@ -1,0 +1,317 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String?
+  role          UserRole  @default(USER)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  bookmarks     Bookmark[]
+  notes         Note[]
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+// Biblical Person model
+model Person {
+  id            String    @id @default(cuid())
+  name          String
+  nameHebrew    String?
+  nameGreek     String?
+  description   String    @db.Text
+  birthYear     Int?      // Estimated year BC/AD
+  deathYear     Int?      // Estimated year BC/AD
+  testament     Testament
+  gender        Gender?
+  significance  String    @db.Text
+  timeline      Json?     // Array of life events
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  birthPlace    Location? @relation("BirthPlace", fields: [birthPlaceId], references: [id])
+  birthPlaceId  String?
+
+  deathPlace    Location? @relation("DeathPlace", fields: [deathPlaceId], references: [id])
+  deathPlaceId  String?
+
+  events        Event[]   @relation("PersonEvents")
+  journeys      Journey[]
+  relationships PersonRelationship[] @relation("PersonFrom")
+  relatedTo     PersonRelationship[] @relation("PersonTo")
+  verses        BibleVerse[]
+  bookmarks     Bookmark[]
+  notes         Note[]
+}
+
+enum Testament {
+  OLD
+  NEW
+  BOTH
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+// Location model for biblical places
+model Location {
+  id            String    @id @default(cuid())
+  name          String
+  nameHebrew    String?
+  nameGreek     String?
+  modernName    String?
+  country       String?
+  latitude      Float
+  longitude     Float
+  description   String    @db.Text
+  significance  String    @db.Text
+  period        String?   // Historical period
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  events        Event[]
+  birthPersons  Person[]  @relation("BirthPlace")
+  deathPersons  Person[]  @relation("DeathPlace")
+  journeyStops  JourneyStop[]
+  verses        BibleVerse[]
+  bookmarks     Bookmark[]
+  notes         Note[]
+}
+
+// Event model for biblical events
+model Event {
+  id            String    @id @default(cuid())
+  title         String
+  description   String    @db.Text
+  year          Int?      // Estimated year BC/AD
+  yearRange     String?   // E.g., "1400-1200 BC"
+  testament     Testament
+  category      EventCategory
+  significance  String    @db.Text
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  location      Location? @relation(fields: [locationId], references: [id])
+  locationId    String?
+
+  persons       Person[]  @relation("PersonEvents")
+  verses        BibleVerse[]
+  bookmarks     Bookmark[]
+  notes         Note[]
+}
+
+enum EventCategory {
+  CREATION
+  PATRIARCHS
+  EXODUS
+  CONQUEST
+  JUDGES
+  MONARCHY
+  EXILE
+  RETURN
+  MINISTRY
+  MIRACLE
+  TEACHING
+  CRUCIFIXION
+  RESURRECTION
+  CHURCH
+  PROPHECY
+}
+
+// Journey model for tracking biblical travels
+model Journey {
+  id            String    @id @default(cuid())
+  title         String
+  description   String    @db.Text
+  startYear     Int?
+  endYear       Int?
+  distance      Float?    // in kilometers
+  duration      String?   // E.g., "40 years", "3 months"
+  purpose       String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  person        Person    @relation(fields: [personId], references: [id])
+  personId      String
+
+  stops         JourneyStop[]
+  bookmarks     Bookmark[]
+  notes         Note[]
+}
+
+model JourneyStop {
+  id            String    @id @default(cuid())
+  orderIndex    Int
+  description   String?
+  duration      String?   // E.g., "3 days", "1 month"
+
+  journey       Journey   @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  journeyId     String
+
+  location      Location  @relation(fields: [locationId], references: [id])
+  locationId    String
+
+  @@unique([journeyId, orderIndex])
+}
+
+// Theme model for biblical themes and topics
+model Theme {
+  id            String    @id @default(cuid())
+  title         String    @unique
+  category      ThemeCategory
+  description   String    @db.Text
+  summary       String    @db.Text
+  applications  String[]  // Modern applications/lessons
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  verses        BibleVerse[]
+  relatedThemes Theme[]   @relation("RelatedThemes")
+  themesRelated Theme[]   @relation("RelatedThemes")
+  bookmarks     Bookmark[]
+  notes         Note[]
+}
+
+enum ThemeCategory {
+  FAITH
+  LOVE
+  SALVATION
+  PRAYER
+  WISDOM
+  PROPHECY
+  LAW
+  COVENANT
+  KINGDOM
+  WORSHIP
+  SIN
+  REDEMPTION
+  HOLINESS
+  JUSTICE
+  MERCY
+}
+
+// Bible Verse reference model
+model BibleVerse {
+  id            String    @id @default(cuid())
+  book          String
+  chapter       Int
+  verseStart    Int
+  verseEnd      Int?
+  text          String    @db.Text
+  textHebrew    String?   @db.Text
+  textGreek     String?   @db.Text
+  translation   String    @default("NIV")
+  createdAt     DateTime  @default(now())
+
+  persons       Person[]
+  locations     Location[]
+  events        Event[]
+  themes        Theme[]
+
+  @@unique([book, chapter, verseStart, verseEnd, translation])
+  @@index([book, chapter])
+}
+
+// Person relationship model
+model PersonRelationship {
+  id            String    @id @default(cuid())
+  relationshipType RelationType
+  description   String?
+
+  personFrom    Person    @relation("PersonFrom", fields: [personFromId], references: [id])
+  personFromId  String
+
+  personTo      Person    @relation("PersonTo", fields: [personToId], references: [id])
+  personToId    String
+
+  @@unique([personFromId, personToId, relationshipType])
+}
+
+enum RelationType {
+  PARENT
+  CHILD
+  SPOUSE
+  SIBLING
+  ANCESTOR
+  DESCENDANT
+  MENTOR
+  DISCIPLE
+  FRIEND
+  ENEMY
+  ALLY
+}
+
+// User bookmarks
+model Bookmark {
+  id            String    @id @default(cuid())
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  title         String?
+  createdAt     DateTime  @default(now())
+
+  person        Person?   @relation(fields: [personId], references: [id])
+  personId      String?
+
+  location      Location? @relation(fields: [locationId], references: [id])
+  locationId    String?
+
+  event         Event?    @relation(fields: [eventId], references: [id])
+  eventId       String?
+
+  journey       Journey?  @relation(fields: [journeyId], references: [id])
+  journeyId     String?
+
+  theme         Theme?    @relation(fields: [themeId], references: [id])
+  themeId       String?
+
+  @@index([userId])
+}
+
+// User notes
+model Note {
+  id            String    @id @default(cuid())
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  content       String    @db.Text
+  isPublic      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  person        Person?   @relation(fields: [personId], references: [id])
+  personId      String?
+
+  location      Location? @relation(fields: [locationId], references: [id])
+  locationId    String?
+
+  event         Event?    @relation(fields: [eventId], references: [id])
+  eventId       String?
+
+  journey       Journey?  @relation(fields: [journeyId], references: [id])
+  journeyId     String?
+
+  theme         Theme?    @relation(fields: [themeId], references: [id])
+  themeId       String?
+
+  @@index([userId])
+}
