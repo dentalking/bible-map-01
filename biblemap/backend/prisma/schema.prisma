@@ -184,7 +184,7 @@ model Theme {
   titleGreek    String?   // Greek title
   category      ThemeCategory
   description   String    @db.Text
-  summary       String    @db.Text
+  summary       String?   @db.Text
   significance  String?   @db.Text // Theological significance
   applications  String[]  // Modern applications/lessons
   imageUrl      String?
