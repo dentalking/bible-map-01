@@ -84,6 +84,8 @@ model Location {
   description   String    @db.Text
   significance  String    @db.Text
   period        String?   // Historical period
+  region        Region?   // Geographic region
+  locationType  LocationType? // Type of location
   imageUrl      String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -178,9 +180,12 @@ model JourneyStop {
 model Theme {
   id            String    @id @default(cuid())
   title         String    @unique
+  titleHebrew   String?   // Hebrew title
+  titleGreek    String?   // Greek title
   category      ThemeCategory
   description   String    @db.Text
   summary       String    @db.Text
+  significance  String?   @db.Text // Theological significance
   applications  String[]  // Modern applications/lessons
   imageUrl      String?
   createdAt     DateTime  @default(now())
@@ -314,4 +319,28 @@ model Note {
   themeId       String?
 
   @@index([userId])
+}
+// Geographic regions for locations
+enum Region {
+  AFRICA
+  ASIA
+  EUROPE
+  MIDDLE_EAST
+  NORTH_AMERICA
+  SOUTH_AMERICA
+  OCEANIA
+}
+
+// Types of biblical locations
+enum LocationType {
+  CITY
+  COUNTRY
+  MOUNTAIN
+  REGION
+  BODY_OF_WATER
+  BUILDING
+  GARDEN
+  DESERT
+  VALLEY
+  ISLAND
 }
