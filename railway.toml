@@ -9,7 +9,7 @@ restartPolicyType = "ON_FAILURE"
 [[services]]
 name = "frontend"
 rootDirectory = "biblemap/frontend"
-buildCommand = "npm install && npm run build"
+buildCommand = "npm ci && npm run build"
 startCommand = "npm start"
 healthcheckPath = "/"
 port = 3000
@@ -21,8 +21,8 @@ domain = "biblemap.up.railway.app"
 [[services]]
 name = "backend"
 rootDirectory = "biblemap/backend"
-buildCommand = "npm install && npx prisma generate"
-startCommand = "npm run migrate && npm run seed && npm start"
+buildCommand = "npm ci && npx prisma generate && npm run build"
+startCommand = "npx prisma migrate deploy && npm start"
 healthcheckPath = "/health"
 port = 4000
 

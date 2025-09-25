@@ -1,0 +1,29 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "services": {
+    "backend": {
+      "root": "biblemap/backend",
+      "build": {
+        "builder": "NIXPACKS",
+        "buildCommand": "npm ci && npx prisma generate && npm run build"
+      },
+      "deploy": {
+        "startCommand": "npx prisma migrate deploy && npm start",
+        "restartPolicyType": "ON_FAILURE",
+        "restartPolicyMaxRetries": 10
+      }
+    },
+    "frontend": {
+      "root": "biblemap/frontend",
+      "build": {
+        "builder": "NIXPACKS",
+        "buildCommand": "npm ci && npm run build"
+      },
+      "deploy": {
+        "startCommand": "npm start",
+        "restartPolicyType": "ON_FAILURE",
+        "restartPolicyMaxRetries": 10
+      }
+    }
+  }
+}
