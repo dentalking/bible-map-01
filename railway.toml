@@ -1,0 +1,29 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+numReplicas = 1
+restartPolicyType = "ON_FAILURE"
+
+# Frontend Service Configuration
+[[services]]
+name = "frontend"
+rootDirectory = "biblemap/frontend"
+buildCommand = "npm install && npm run build"
+startCommand = "npm start"
+healthcheckPath = "/"
+port = 3000
+
+[[services.domains]]
+domain = "biblemap.up.railway.app"
+
+# Backend Service Configuration
+[[services]]
+name = "backend"
+rootDirectory = "biblemap/backend"
+buildCommand = "npm install && npx prisma generate"
+startCommand = "npm run migrate && npm run seed && npm start"
+healthcheckPath = "/health"
+port = 4000
+
+# PostgreSQL is added via Railway UI
